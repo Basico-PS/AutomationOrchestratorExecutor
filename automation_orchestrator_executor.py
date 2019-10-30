@@ -39,8 +39,8 @@ def create_cfg_file():
     while True:
         url = input("Please input the Automation Orchestrator base url: ")
         username = input("Please input your username: ")
-        password = getpass("Please input your passowrd: ")
-        password_check = getpass("Please input your passowrd again: ")
+        password = getpass("Please input your password: ")
+        password_check = getpass("Please input your password again: ")
         
         if password != password_check:
             print("The passwords do not match...")
