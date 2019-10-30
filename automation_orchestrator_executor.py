@@ -69,7 +69,7 @@ def get_data(url, username, password):
 def patch_data(url, username, password, record, data):
     while True:	
         with Session() as request:
-            response = request.get(f'{url}/api/0/execution/{record}/', auth=HTTPBasicAuth(username, password), data=data)
+            response = request.get(f'{url}api/0/execution/{record}/', auth=HTTPBasicAuth(username, password), data=data)
 
         if response.status_code != 429:
             break
@@ -82,14 +82,11 @@ def run_executions(url, username, password, items):
     items = sorted(sorted(items, key=itemgetter('priority'), reverse=True), key=itemgetter('time_queued'), reverse=False)
 
     for item in items:	
-        while True:	
-            if not any(item["app"].split("\\")[-1].lower() in process.lower() for process in subprocess.run(["wmic", "process", "get", "description,executablepath"], stdout=subprocess.PIPE, text=True).stdout.split('\n')):	
-                break
-            range(10000)
-            sleep(interval)
+        if any(item["app"].split("\\")[-1].lower() in process.lower() for process in subprocess.run(["wmic", "process", "get", "description,executablepath"], stdout=subprocess.PIPE, text=True).stdout.split('\n')):	
+            continue
             
-        data = {"time_start": datetime.now(pytz.timezone('Europe/Copenhagen')).strftime(f"%Y-%m-%dT%H:%M:%S+0{str(int(datetime.now(pytz.timezone('Europe/Copenhagen')).utcoffset().seconds / 60 / 60))}00"), "status": "Running"}
-        patch_data(url, username, password, item['id'], data)	
+        data = {"time_start": datetime.now(pytz.timezone('Europe/Copenhagen')).strftime(f"%Y-%m-%dT%H:%M:%S+0{str(int(datetime.now(pytz.timezone('Europe/Copenhagen')).utcoffset().seconds / 60 / 60))}:00"), "status": "Running"}
+        patch_data(url, username, password, str(item['id']), data)
 
         status = "Completed"
 
@@ -123,8 +120,8 @@ def run_executions(url, username, password, items):
         else:	
             status = "Error - Botflow Missing"	
 
-        data = {"time_end": datetime.now(pytz.timezone('Europe/Copenhagen')).strftime(f"%Y-%m-%dT%H:%M:%S+0{str(int(datetime.now(pytz.timezone('Europe/Copenhagen')).utcoffset().seconds / 60 / 60))}00"), "status": status}
-        patch_data(url, username, password, item['id'],	data)	
+        data = {"time_end": datetime.now(pytz.timezone('Europe/Copenhagen')).strftime(f"%Y-%m-%dT%H:%M:%S+0{str(int(datetime.now(pytz.timezone('Europe/Copenhagen')).utcoffset().seconds / 60 / 60))}:00"), "status": status}
+        patch_data(url, username, password, str(item['id']), data)	
 
         break
 
@@ -143,16 +140,10 @@ def main():
         if get_data(data['url'], data['username'], data['password']) == False:
             print("The user authentication failed...")
             
-        i = 0
-        stdout.write(f"\rMonitoring for {i} seconds, sending requests every {interval} seconds...")
-        stdout.flush()
         while True:
             range(10000)	
             sleep(interval)
-            i = i + interval
             
-            stdout.write(f"\rMonitoring for {i} seconds, sending requests every {interval} seconds...")
-            stdout.flush()
             items = get_data(data['url'], data['username'], data['password'])
             run_executions(data['url'], data['username'], data['password'], items)
 
