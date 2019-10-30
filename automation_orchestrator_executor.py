@@ -69,7 +69,7 @@ def get_data(url, username, password):
 def patch_data(url, username, password, record, data):
     while True:	
         with Session() as request:
-            response = request.get(f'{url}api/0/execution/{record}/', auth=HTTPBasicAuth(username, password), data=data)
+            response = request.patch(f'{url}api/0/execution/{record}/', auth=HTTPBasicAuth(username, password), data=data)
 
         if response.status_code != 429:
             break
