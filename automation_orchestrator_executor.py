@@ -1,6 +1,5 @@
 import subprocess
 import pytz
-from sys import exit, stdout
 from time import sleep
 from json import dumps, loads
 from os import environ, path, system
@@ -8,13 +7,13 @@ from datetime import datetime
 from getpass import getpass
 from operator import itemgetter
 from traceback import format_exc
-from random import randrange
+from random import randint
 from requests import Session	
 from requests.auth import HTTPBasicAuth
+from requests.exceptions import Timeout
 from cryptography.fernet import Fernet
 
 
-interval = 5
 env_var_name = "AUTOMATIONORCHESTRATOR_SECRET_KEY"
 cfg_file_name = "automationorchestrator.cfg"
 
@@ -22,17 +21,14 @@ cfg_file_name = "automationorchestrator.cfg"
 def create_env_variable():
     key = Fernet.generate_key()
     
-    process = subprocess.Popen(['setx', env_var_name, key.decode("utf-8")], stdout=subprocess.PIPE)
-    process_out, process_err = process.communicate()
+    process = subprocess.run(['setx', env_var_name, key.decode("utf-8")], stdout=subprocess.PIPE)
     
-    if process_out.decode("utf-8").strip() != "SUCCESS: Specified value was saved.":
+    if process.stdout.decode("utf-8").strip() != "SUCCESS: Specified value was saved.":
         input(f"""
 Please make sure to create an environment variable called "{env_var_name}"
 and set the value to: {key.decode("utf-8")}
 Once you have done so, press Enter to continue...
-    """)
-        
-    exit()
+""")
     
     
 def create_cfg_file():    
@@ -43,9 +39,9 @@ def create_cfg_file():
         password_check = getpass("Please input your password again: ")
         
         if password != password_check:
-            print("The passwords do not match...")
+            print("The passwords do not match, please retry...")
         elif get_data(url, username, password) == False:
-            print("The user authentication failed...")
+            print("The user authentication failed, please retry...")
         else:
             break
     
@@ -54,14 +50,31 @@ def create_cfg_file():
         
 
 def get_data(url, username, password):
-    while True:	
-        with Session() as request:
-            response = request.get(f'{url}api/0/execution/', auth=HTTPBasicAuth(username, password))
+    errors = 1
+    
+    while True:
+        sleep(2)
+        
+        if errors <= 3:
+            with Session() as request:
+                try:
+                    response = request.get(f'{url}api/0/execution/', auth=HTTPBasicAuth(username, password), timeout=10)
+                
+                except Timeout:
+                    return None
+                
+                except:
+                    print(f"{datetime.now()}: Connecting to the server failed...")
+                    errors += 1
+                    continue
 
-        if response.status_code == 401:
+            if response.status_code == 401:
+                return False
+            if response.status_code != 429:
+                break
+            
+        else:
             return False
-        if response.status_code != 429:
-            break
         
     return response.json()
         
@@ -76,13 +89,34 @@ def patch_data(url, username, password, record, data):
         
         sleep(1)
         
+        
+def monitor_executions(data):    
+    print(f"{datetime.now()}: The monitoring is now running on!")
+    
+    while True:    
+        range(10000)	
+        sleep(randint(5, 15))
+        
+        items = get_data(data['url'], data['username'], data['password'])
+        
+        if items == None:
+            continue
+        
+        elif items == False:
+            return False
+    
+        run_executions(data['url'], data['username'], data['password'], items)
+        
 
-def run_executions(url, username, password, items):	
-    items = [item for item in items if item['status'] == "Pending" and item['computer_name'].upper() == environ['COMPUTERNAME'].upper() and item['user_name'].upper() == environ['USERNAME'].upper()]	
-    items = sorted(sorted(items, key=itemgetter('priority'), reverse=True), key=itemgetter('time_queued'), reverse=False)
+def run_executions(url, username, password, items):
+    items = [item for item in items if item['status'] == "Pending" and item['computer_name'].upper() == environ['COMPUTERNAME'].upper() and item['user_name'].upper() == environ['USERNAME'].upper()]
 
-    for item in items:	
-        if any(item["app"].split("\\")[-1].lower() in process.lower() for process in subprocess.run(["wmic", "process", "get", "description,executablepath"], stdout=subprocess.PIPE, text=True).stdout.split('\n')):	
+    for item in items:
+        app = item.app.split("\\")[-1].lower()
+        username = environ['USERNAME'].lower()
+        processes = subprocess.run(["wmic", "process", "where", f"name='{app}'", "call", "GetOwner"], stdout=subprocess.PIPE, text=True).stdout.split('\n')
+        
+        if any(str(f'\tuser = "{username}";') in user.lower() for user in processes):
             continue
             
         data = {"time_start": datetime.now(pytz.timezone('Europe/Copenhagen')).strftime(f"%Y-%m-%dT%H:%M:%S+0{str(int(datetime.now(pytz.timezone('Europe/Copenhagen')).utcoffset().seconds / 60 / 60))}:00"), "status": "Running"}
@@ -90,38 +124,36 @@ def run_executions(url, username, password, items):
 
         status = "Completed"
 
-        if path.isfile(item['botflow']):
-            if not [{'botflow': x['botflow'], 'trigger': x['trigger']} for x in items if x['status'] == 'Completed'].count({'botflow': item['botflow'], 'trigger': item['trigger']}) >= 1:	
+        if path.isfile(item['botflow']):	
+            try:	
+                if 'foxtrot' or 'foxbot' in item['app'].lower():
+                    if item['close_bot_automatically'] == True or item['close_bot_automatically'].lower() == "true":
+                        subprocess.run([item['app'], '/Open', item['botflow'], '/Run', '/Close', '/Exit'], timeout=(int(item['timeout_minutes']) * 60))
+                    else:
+                        subprocess.run([item['app'], '/Open', item['botflow'], '/Run'], timeout=(int(item['timeout_minutes']) * 60))
+
+            except subprocess.TimeoutExpired:
+                status = "Error - Botflow Timeout"
+                
                 try:	
                     if 'foxtrot' or 'foxbot' in item["app"].lower():	
-                        subprocess.run([item["app"], r'/Open', item['botflow'], r'/Run', r'/Close', r'/Exit'], timeout=(item["timeout_minutes"] * 60))	
-                    else:	
-                        subprocess.run([item["app"], item['botflow']], timeout=(item["timeout_minutes"] * 60))	
+                        system('taskkill /f /im foxtrot64.exe')	
+                except:	
+                    pass	
 
-                except subprocess.TimeoutExpired:
-                    status = "Error - Botflow Timeout"	
+                timeout_kill_processes = [str(process).strip() for process in item['timeout_kill_processes'].split(",")]	
+
+                for process in timeout_kill_processes:	
                     try:	
-                        if 'foxtrot' or 'foxbot' in item["app"].lower():	
-                            system('taskkill /f /im foxtrot64.exe')	
+                        system(f'taskkill /f /im {process}')	
                     except:	
-                        pass	
-
-                    timeout_kill_processes = [str(process).strip() for process in item['timeout_kill_processes'].split(",")]	
-
-                    for process in timeout_kill_processes:	
-                        try:	
-                            system(f'taskkill /f /im {process}')	
-                        except:	
-                            pass	
-
-            else:	
-                status = "Skipped - Duplicate Queue Items Detected"	
+                        pass
 
         else:	
             status = "Error - Botflow Missing"	
 
         data = {"time_end": datetime.now(pytz.timezone('Europe/Copenhagen')).strftime(f"%Y-%m-%dT%H:%M:%S+0{str(int(datetime.now(pytz.timezone('Europe/Copenhagen')).utcoffset().seconds / 60 / 60))}:00"), "status": status}
-        patch_data(url, username, password, str(item['id']), data)	
+        patch_data(url, username, password, str(item['id']), data)
 
         break
 
@@ -131,24 +163,38 @@ def main():
         if not env_var_name in environ:
             create_env_variable()
             
+            print("""
+An environment variable has been created with a unique encryption key.
+This program will close down in 10 seconds. Hereafter, please restart the program...
+""")
+        
+            sleep(10)
+            return None
+            
         if not path.exists(cfg_file_name):
             create_cfg_file()
+        
+        else:
+            with open(cfg_file_name, 'rb') as f:
+                if f.read() == "":
+                    create_cfg_file()
             
         with open(cfg_file_name, 'rb') as f:
             data = loads(Fernet(environ[env_var_name].encode("utf-8")).decrypt(f.read()).decode("utf-8"))
 
         if get_data(data['url'], data['username'], data['password']) == False:
-            print("The user authentication failed...")
+            return None
             
-        while True:
-            range(10000)	
-            sleep(interval)
+        monitor_executions(data)
+        
+    except KeyboardInterrupt:
+        print(f"{datetime.now()}: Stopping the monitoring...")
             
-            items = get_data(data['url'], data['username'], data['password'])
-            run_executions(data['url'], data['username'], data['password'], items)
-
+        sleep(2)
+        return None
+        
     except:	
-        with open("error.txt", 'w') as f:	
+        with open("error.txt", 'w') as f:
             try:	
                 f.write(format_exc())	
                 print(format_exc())	
@@ -156,7 +202,8 @@ def main():
                 pass
             
         sleep(10)
-        exit()
+        return None
+
 
 if __name__ == '__main__':
     main()
