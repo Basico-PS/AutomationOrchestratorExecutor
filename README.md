@@ -8,6 +8,8 @@ The Automation Orchestrator Executor is an add-on to the [Automation Orchestrato
 - Run the Automation Orchestrator on one machine but execute the scripts on a different machine, or
 - Run the Automation Orchestrator on a machine (for example, a Windows Terminal Server) with multiple users that are supposed to execute scripts
 
+IMPORTANT: For the Automation Orchestrator to work, you need to run the server in your protected internal network by using the "RUN_SERVER_NETWORK.bat" [file](https://github.com/Basico-PS/AutomationOrchestrator/blob/master/RUN_SERVER_NETWORK.bat).
+
 ## Installation
 
 For the solution to work, you need to install [Python](https://www.python.org/). The solution is tested with Python 3.7 and 3.8.
