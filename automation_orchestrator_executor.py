@@ -91,7 +91,7 @@ def patch_data(url, username, password, record, data):
         
         
 def monitor_executions(data):    
-    print(f"{datetime.now()}: The monitoring is now running on!")
+    print(f"{datetime.now()}: The monitoring is now running!")
     
     while True:    
         range(10000)	
@@ -112,7 +112,7 @@ def run_executions(url, username, password, items):
     items = [item for item in items if item['status'] == "Pending" and item['computer_name'].upper() == environ['COMPUTERNAME'].upper() and item['user_name'].upper() == environ['USERNAME'].upper()]
 
     for item in items:
-        app = item.app.split("\\")[-1].lower()
+        app = item['app'].split("\\")[-1].lower()
         username = environ['USERNAME'].lower()
         processes = subprocess.run(["wmic", "process", "where", f"name='{app}'", "call", "GetOwner"], stdout=subprocess.PIPE, text=True).stdout.split('\n')
         
