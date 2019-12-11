@@ -113,11 +113,29 @@ def run_executions(url, username, password, items):
 
     for item in items:
         app = item['app'].split("\\")[-1].lower()
-        username = environ['USERNAME'].lower()
-        processes = subprocess.run(["wmic", "process", "where", f"name='{app}'", "call", "GetOwner"], stdout=subprocess.PIPE, text=True).stdout.split('\n')
         
-        if any(str(f'\tuser = "{username}";') in user.lower() for user in processes):
-            continue
+        if app == "foxbot.exe" or app == "foxtrot.exe":
+            processes = subprocess.run(["wmic", "process", "where", f"name='{app}'", "call", "GetOwner"], stdout=subprocess.PIPE, text=True).stdout.split('\n')
+        
+            username = environ['USERNAME'].lower()
+        
+            if any(str(f'\tuser = "{username}";') in user.lower() for user in processes):
+                continue
+                
+            if item.nintex_rpa_license_path != "":
+                nintex_rpa_license_path = item.nintex_rpa_license_path
+                
+                if os.path.exists(nintex_rpa_license_path):
+                    nintex_rpa_license_path = os.path.join(item.nintex_rpa_license_path, "System")
+                    
+                    if os.path.exists(nintex_rpa_license_path):
+                        if app == "foxbot.exe":
+                            if item.nintex_rpa_available_foxbot_licenses <= len([file for file in os.listdir(nintex_rpa_license_path) if file.startswith("RPA") and file.endswith(".net")]):
+                                continue
+
+                        elif app == "foxtrot.exe":
+                            if item.nintex_rpa_available_foxtrot_licenses <= len([file for file in os.listdir(nintex_rpa_license_path) if file.startswith("FTE") and file.endswith(".net")]):
+                                continue
             
         data = {"time_start": datetime.now(pytz.timezone('Europe/Copenhagen')).strftime(f"%Y-%m-%dT%H:%M:%S+0{str(int(datetime.now(pytz.timezone('Europe/Copenhagen')).utcoffset().seconds / 60 / 60))}:00"), "status": "Running"}
         patch_data(url, username, password, str(item['id']), data)
