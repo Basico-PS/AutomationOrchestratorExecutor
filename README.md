@@ -8,15 +8,15 @@ The Automation Orchestrator Executor is an add-on to the [Automation Orchestrato
 - Run the Automation Orchestrator on one machine but execute the scripts on a different machine, or
 - Run the Automation Orchestrator on a machine (for example, a Windows Terminal Server) with multiple users that are supposed to execute scripts
 
-IMPORTANT: For the Automation Orchestrator to work, you need to run the server in your protected internal network by using the "RUN_SERVER_NETWORK.bat" [file](https://github.com/Basico-PS/AutomationOrchestrator/blob/master/RUN_SERVER_NETWORK.bat).
+IMPORTANT: For the Automation Orchestrator to work, you need to run the server in your protected internal network.
 
 ## Installation
 
 For the solution to work, you need to install [Python](https://www.python.org/). The solution is tested with Python 3.7 and 3.8.
 
-1. Download the [latest version](https://github.com/Basico-PS/AutomationOrchestratorExecutor/archive/v0.0.5.zip).
+1. Download the [latest version](https://github.com/Basico-PS/AutomationOrchestratorExecutor/archive/v0.0.6.zip).
 2. Create a folder called "Automation Orchestrator Executor" somewhere convenient, for example, directly on the C: drive or in the "Program Files" folder.
-3. Unzip the folder in your created "Automation Orchestrator Executor" folder. So, your path could be similar to "C:\Automation Orchestrator Executor\AutomationOrchestratorExecutor-0.0.5" or "C:\Program Files\Automation Orchestrator\AutomationOrchestratorExecutor-0.0.5". However, you may unzip the folder anywhere on your system.
+3. Unzip the folder in your created "Automation Orchestrator Executor" folder. So, your path could be similar to "C:\Automation Orchestrator Executor\AutomationOrchestratorExecutor-0.0.6" or "C:\Program Files\Automation Orchestrator\AutomationOrchestratorExecutor-0.0.6". However, you may unzip the folder anywhere on your system.
 4. After unzipping the folder, run the "INSTALL.bat" [file](https://github.com/Basico-PS/AutomationOrchestratorExecutor/blob/master/INSTALL.bat) for an automated installation process. You may also manually run the installation steps via, for example, the CMD. Remember to run the batch file (or commands manually) as an administrator.
 5. The last command of the installation process will prompt you to write your username and password of the user created in the Automation Orchestrator.
 
