@@ -1,9 +1,5 @@
 # Basico P/S - Automation Orchestrator Executor
 
-<i>More documentation is underway...</i>
-
-For support, please contact us: robotics@basico.dk
-
 The Automation Orchestrator Executor is an add-on to the [Automation Orchestrator](https://github.com/Basico-PS/AutomationOrchestrator) allowing you to monitor the execution queue from a different machine in your protected internal network and execute the pending scripts assigned to your machine and user. This is relevant if you wish to either:
 - Run the Automation Orchestrator on one machine but execute the scripts on a different machine, or
 - Run the Automation Orchestrator on a machine (for example, a Windows Terminal Server) with multiple users that are supposed to execute scripts
