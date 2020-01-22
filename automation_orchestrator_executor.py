@@ -1,3 +1,4 @@
+import os
 import subprocess
 import pytz
 from time import sleep
@@ -16,6 +17,8 @@ from cryptography.fernet import Fernet
 
 env_var_name = "AUTOMATIONORCHESTRATOR_SECRET_KEY"
 cfg_file_name = "automationorchestrator.cfg"
+error_count_max = 10
+botflow_execution_url = "api/0/botflowexecution/"
 
 
 def create_env_variable():
@@ -55,10 +58,10 @@ def get_data(url, username, password):
     while True:
         sleep(2)
 
-        if errors <= 3:
+        if errors <= error_count_max:
             with Session() as request:
                 try:
-                    response = request.get(f'{url}api/0/execution/', auth=HTTPBasicAuth(username, password), timeout=10)
+                    response = request.get(f'{url}{botflow_execution_url}', auth=HTTPBasicAuth(username, password), timeout=10)
 
                 except Timeout:
                     return None
@@ -76,13 +79,18 @@ def get_data(url, username, password):
         else:
             return False
 
-    return response.json()
+    try:
+        request_response = response.json()
+    except:
+        request_response = None
+
+    return request_response
 
 
 def patch_data(url, username, password, record, data):
     while True:
         with Session() as request:
-            response = request.patch(f'{url}api/0/execution/{record}/', auth=HTTPBasicAuth(username, password), data=data)
+            response = request.patch(f'{url}{botflow_execution_url}{record}/', auth=HTTPBasicAuth(username, password), data=data)
 
         if response.status_code != 429:
             break
@@ -181,6 +189,9 @@ def run_executions(url, username, password, items):
 
 def main():
     try:
+        if os.path.exists("error.txt"):
+            os.remove("error.txt")
+    
         if not env_var_name in environ:
             create_env_variable()
 
