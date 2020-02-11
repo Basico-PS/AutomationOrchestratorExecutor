@@ -125,9 +125,9 @@ def run_executions(url, username, password, items):
         if app == "foxbot.exe" or app == "foxtrot.exe":
             processes = subprocess.run(["wmic", "process", "where", f"name='{app}'", "call", "GetOwner"], stdout=subprocess.PIPE, text=True).stdout.split('\n')
 
-            username = environ['USERNAME'].lower()
+            windows_username = environ['USERNAME'].lower()
 
-            if any(str(f'\tuser = "{username}";') in user.lower() for user in processes):
+            if any(str(f'\tuser = "{windows_username}";') in user.lower() for user in processes):
                 continue
 
             try:
