@@ -9,10 +9,11 @@ from getpass import getpass
 from operator import itemgetter
 from traceback import format_exc
 from random import randint
-from requests import Session	
+from requests import Session
 from requests.auth import HTTPBasicAuth
 from requests.exceptions import Timeout
 from cryptography.fernet import Fernet
+from operator import itemgetter
 
 
 env_var_name = "AUTOMATIONORCHESTRATOR_SECRET_KEY"
@@ -118,6 +119,7 @@ def monitor_executions(data):
 
 def run_executions(url, username, password, items):
     items = [item for item in items if item['status'] == "Pending" and item['computer_name'].upper() == environ['COMPUTERNAME'].upper() and item['user_name'].upper() == environ['USERNAME'].upper()]
+    items = sorted(items, key=itemgetter('priority', 'id'))
 
     for item in items:
         app = item['app'].split("\\")[-1].lower()
@@ -191,7 +193,7 @@ def main():
     try:
         if os.path.exists("error.txt"):
             os.remove("error.txt")
-    
+
         if not env_var_name in environ:
             create_env_variable()
 
