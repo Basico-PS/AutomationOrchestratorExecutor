@@ -160,6 +160,10 @@ def run_executions(url, username, password, items):
                 if 'foxtrot' or 'foxbot' in item['app'].lower():
                     if item['close_bot_automatically']:
                         subprocess.run([item['app'], '/Open', item['botflow'], '/Run', '/Close', '/Exit'], timeout=(int(item['timeout_minutes']) * 60))
+
+                    elif app == "uirobot.exe":
+                        subprocess.run([item.app, "execute", "--file", item.botflow, "--input", str({'aoTrigger': item.trigger})], timeout=(item.timeout_minutes * 60))
+
                     else:
                         subprocess.run([item['app'], '/Open', item['botflow'], '/Run'], timeout=(int(item['timeout_minutes']) * 60))
 
