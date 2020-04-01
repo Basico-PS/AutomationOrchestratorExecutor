@@ -301,7 +301,7 @@ def run_executions(url, username, password, items):
                             subprocess.run(
                                 [item['app'], '/Open', item['botflow'], '/Run', '/Close', '/Exit'],
                                 timeout=(int(item['timeout_minutes']) * 60),
-                                cwd=path.dirname(item['botflow']),
+                                cwd=path.dirname(item['app']),
                                 stdout=executor_log
                             )
 
@@ -309,7 +309,7 @@ def run_executions(url, username, password, items):
                             subprocess.run(
                                 [item['app'], '/Open', item['botflow'], '/Run'],
                                 timeout=(int(item['timeout_minutes']) * 60),
-                                cwd=path.dirname(item['botflow']),
+                                cwd=path.dirname(item['app']),
                                 stdout=executor_log
                             )
 
