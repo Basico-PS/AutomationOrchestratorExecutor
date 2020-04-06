@@ -368,6 +368,8 @@ def run_executions(url, username, password, items):
 
 
 def main():
+    os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
     if path.exists(error_log_file):
         remove(error_log_file)
 

@@ -15,5 +15,5 @@ IF %privileges% == Y (
     )
 )
 
-CALL SCHTASKS /CREATE /SC DAILY /TN "AutomationOrchestratorExecutorRunExecutor" /TR "%CD%\run_executor\RUN_EXECUTOR.bat" /ST 00:00 /RI 1 /DU 23:59 /RL %level% /F
+CALL SCHTASKS /CREATE /SC DAILY /TN "AutomationOrchestratorExecutorRunExecutor" /TR "'%CD%\venv\scripts\python.exe' %CD%\automation_orchestrator_executor\automation_orchestrator_executor.py" /ST 00:00 /RI 1 /DU 23:59 /RL %level% /F
 TIMEOUT 15
