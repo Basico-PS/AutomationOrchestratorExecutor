@@ -67,7 +67,7 @@ def get_data(url, username, password):
         if errors <= error_count_max:
             with Session() as request:
                 try:
-                    request_filters = "?status=Pending"
+                    request_filters = f"?computer_name__iexact={env_computer}&user_name__iexact={env_user}&status=Pending"
                     response = request.get(f'{url}{botflow_execution_url}{request_filters}', auth=HTTPBasicAuth(username, password), timeout=10)
 
                 except Timeout:
