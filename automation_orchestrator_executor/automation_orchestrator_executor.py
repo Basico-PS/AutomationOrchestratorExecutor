@@ -224,15 +224,15 @@ def monitor_executions(credentials):
                 continue
 
             elif items == False:
-                return None
+                break
 
             if not run_executions(credentials['url'], credentials['username'], credentials['password'], items):
-                return None
+                break
 
             if (datetime.now() - start_time).seconds >= max_runtime:
                 print(f"{datetime.now()}: The executor has now been running for more than {str(max_runtime)} seconds and is closing to restart...")
                 sleep(10)
-                return None
+                break
 
     except KeyboardInterrupt:
         print(f"{datetime.now()}: Stopping the monitoring...")
