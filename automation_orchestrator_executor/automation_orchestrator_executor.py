@@ -71,12 +71,12 @@ def get_data(url, username, password):
                     response = request.get(f'{url}{botflow_execution_url}{request_filters}', auth=HTTPBasicAuth(username, password), timeout=10)
 
                 except Timeout:
-                    print(f"{datetime.now()}: The request to Automation Orchestator timed out, retrying...")
+                    print(f"{datetime.now()}: The request to Automation Orchestrator timed out, retrying...")
 
                     with open(error_log_file, 'a') as f:
                         try:
                             f.write(f"{format_exc()}\n")
-                            f.write(f"{datetime.now()}: The request to Automation Orchestator timed out, retrying...\n")
+                            f.write(f"{datetime.now()}: The request to Automation Orchestrator timed out, retrying...\n")
                         except:
                             pass
 
@@ -84,12 +84,12 @@ def get_data(url, username, password):
                     continue
 
                 except:
-                    print(f"{datetime.now()}: Failed to connect to Automation Orchestator, retrying...")
+                    print(f"{datetime.now()}: Failed to connect to Automation Orchestrator, retrying...")
 
                     with open(error_log_file, 'a') as f:
                         try:
                             f.write(f"{format_exc()}\n")
-                            f.write(f"{datetime.now()}: Failed to connect to Automation Orchestator, retrying...\n")
+                            f.write(f"{datetime.now()}: Failed to connect to Automation Orchestrator, retrying...\n")
                         except:
                             pass
 
@@ -145,12 +145,12 @@ def patch_data(url, username, password, record, data):
                     response = request.patch(f'{url}{botflow_execution_url}{record}/', auth=HTTPBasicAuth(username, password), timeout=10, data=data)
 
                 except Timeout:
-                    print(f"{datetime.now()}: The request to Automation Orchestator timed out, retrying...")
+                    print(f"{datetime.now()}: The request to Automation Orchestrator timed out, retrying...")
 
                     with open(error_log_file, 'a') as f:
                         try:
                             f.write(f"{format_exc()}\n")
-                            f.write(f"{datetime.now()}: The request to Automation Orchestator timed out, retrying...\n")
+                            f.write(f"{datetime.now()}: The request to Automation Orchestrator timed out, retrying...\n")
                         except:
                             pass
 
@@ -158,12 +158,12 @@ def patch_data(url, username, password, record, data):
                     continue
 
                 except:
-                    print(f"{datetime.now()}: Failed to connect to Automation Orchestator, retrying...")
+                    print(f"{datetime.now()}: Failed to connect to Automation Orchestrator, retrying...")
 
                     with open(error_log_file, 'a') as f:
                         try:
                             f.write(f"{format_exc()}\n")
-                            f.write(f"{datetime.now()}: Failed to connect to Automation Orchestator, retrying...\n")
+                            f.write(f"{datetime.now()}: Failed to connect to Automation Orchestrator, retrying...\n")
                         except:
                             pass
 
