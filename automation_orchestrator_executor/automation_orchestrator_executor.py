@@ -14,26 +14,28 @@ from requests.auth import HTTPBasicAuth
 from requests.exceptions import Timeout
 from cryptography.fernet import Fernet
 from operator import itemgetter
+from infi.systray import SysTrayIcon
 
 
-env_var = "BASICO_AUTOMATIONORCHESTRATOREXECUTOR_SECRET_KEY"
-env_computer = environ['COMPUTERNAME'].lower()
-env_user = environ['USERNAME'].lower()
-cfg_cred_file = "configuration\\credentials.cfg"
-error_log_file = "logs\\error_log.txt"
-executor_log_file = "logs\\executor_log.txt"
-botflow_execution_url = "api/0/botflowexecution/"
-error_count_max = 10
+ENV_VAR = "BASICO_AUTOMATIONORCHESTRATOREXECUTOR_SECRET_KEY"
+ENV_COMPUTER = environ['COMPUTERNAME'].lower()
+ENV_USER = environ['USERNAME'].lower()
+CFG_CRED_FILE = "configuration\\credentials.cfg"
+ERROR_LOG_FILE = "logs\\error_log.txt"
+EXECUTOR_LOG_FILE = "logs\\executor_log.txt"
+BOTFLOW_EXECUTION_URL = "api/0/botflowexecution/"
+ERROR_COUNT_MAX = 10
+SHUT_DOWN = False
 
 
 def create_env_variable():
     key = Fernet.generate_key()
 
-    process = subprocess.run(['setx', env_var, key.decode("utf-8")], stdout=subprocess.PIPE)
+    process = subprocess.run(['setx', ENV_VAR, key.decode("utf-8")], stdout=subprocess.PIPE)
 
     if process.stdout.decode("utf-8").strip() != "SUCCESS: Specified value was saved.":
         input(f"""
-Please make sure to create an environment variable called "{env_var}"
+Please make sure to create an environment variable called "{ENV_VAR}"
 and set the value to: {key.decode("utf-8")}
 Once you have done so, press Enter to continue...
 """)
@@ -53,8 +55,8 @@ def create_cfg_file():
         else:
             break
 
-    with open(cfg_cred_file, 'wb') as f:
-        f.write(Fernet(environ[env_var].encode("utf-8")).encrypt(dumps({'url': url, 'username': username, 'password': password}).encode('utf-8')))
+    with open(CFG_CRED_FILE, 'wb') as f:
+        f.write(Fernet(environ[ENV_VAR].encode("utf-8")).encrypt(dumps({'url': url, 'username': username, 'password': password}).encode('utf-8')))
 
 
 def get_data(url, username, password):
@@ -63,16 +65,16 @@ def get_data(url, username, password):
     while True:
         sleep(1)
 
-        if errors <= error_count_max:
+        if errors <= ERROR_COUNT_MAX:
             with Session() as request:
                 try:
-                    request_filters = f"?computer_name__iexact={env_computer}&user_name__iexact={env_user}&status=Pending"
-                    response = request.get(f'{url}{botflow_execution_url}{request_filters}', auth=HTTPBasicAuth(username, password), timeout=10)
+                    request_filters = f"?computer_name__iexact={ENV_COMPUTER}&user_name__iexact={ENV_USER}&status=Pending"
+                    response = request.get(f'{url}{BOTFLOW_EXECUTION_URL}{request_filters}', auth=HTTPBasicAuth(username, password), timeout=10)
 
                 except Timeout:
                     print(f"{datetime.now()}: The request to Automation Orchestrator timed out, retrying...")
 
-                    with open(error_log_file, 'a') as f:
+                    with open(ERROR_LOG_FILE, 'a') as f:
                         try:
                             f.write(f"{format_exc()}\n")
                             f.write(f"{datetime.now()}: The request to Automation Orchestrator timed out, retrying...\n")
@@ -85,7 +87,7 @@ def get_data(url, username, password):
                 except:
                     print(f"{datetime.now()}: Failed to connect to Automation Orchestrator, retrying...")
 
-                    with open(error_log_file, 'a') as f:
+                    with open(ERROR_LOG_FILE, 'a') as f:
                         try:
                             f.write(f"{format_exc()}\n")
                             f.write(f"{datetime.now()}: Failed to connect to Automation Orchestrator, retrying...\n")
@@ -98,10 +100,10 @@ def get_data(url, username, password):
             if response.status_code == 401:
                 print(f"{datetime.now()}: The user authentication failed! The executor will close and restart now, prompting for new credentials...")
 
-                if path.exists(cfg_cred_file):
-                    remove(cfg_cred_file)
+                if path.exists(CFG_CRED_FILE):
+                    remove(CFG_CRED_FILE)
 
-                with open(error_log_file, 'a') as f:
+                with open(ERROR_LOG_FILE, 'a') as f:
                     try:
                         f.write(f"{datetime.now()}: The user authentication failed!\n")
                     except:
@@ -119,7 +121,7 @@ def get_data(url, username, password):
     try:
         request_response = response.json()
 
-        with open(executor_log_file, 'a') as f:
+        with open(EXECUTOR_LOG_FILE, 'a') as f:
             try:
                 f.write(f"{datetime.now()}: GET\n")
                 f.write(f"{datetime.now()}: {str(request_response)}\n")
@@ -138,15 +140,15 @@ def patch_data(url, username, password, record, data):
     while True:
         sleep(1)
 
-        if errors <= error_count_max:
+        if errors <= ERROR_COUNT_MAX:
             with Session() as request:
                 try:
-                    response = request.patch(f'{url}{botflow_execution_url}{record}/', auth=HTTPBasicAuth(username, password), timeout=10, data=data)
+                    response = request.patch(f'{url}{BOTFLOW_EXECUTION_URL}{record}/', auth=HTTPBasicAuth(username, password), timeout=10, data=data)
 
                 except Timeout:
                     print(f"{datetime.now()}: The request to Automation Orchestrator timed out, retrying...")
 
-                    with open(error_log_file, 'a') as f:
+                    with open(ERROR_LOG_FILE, 'a') as f:
                         try:
                             f.write(f"{format_exc()}\n")
                             f.write(f"{datetime.now()}: The request to Automation Orchestrator timed out, retrying...\n")
@@ -159,7 +161,7 @@ def patch_data(url, username, password, record, data):
                 except:
                     print(f"{datetime.now()}: Failed to connect to Automation Orchestrator, retrying...")
 
-                    with open(error_log_file, 'a') as f:
+                    with open(ERROR_LOG_FILE, 'a') as f:
                         try:
                             f.write(f"{format_exc()}\n")
                             f.write(f"{datetime.now()}: Failed to connect to Automation Orchestrator, retrying...\n")
@@ -172,10 +174,10 @@ def patch_data(url, username, password, record, data):
             if response.status_code == 401:
                 print(f"{datetime.now()}: The user authentication failed! The executor will close and restart now, prompting for new credentials...")
 
-                if path.exists(cfg_cred_file):
-                    remove(cfg_cred_file)
+                if path.exists(CFG_CRED_FILE):
+                    remove(CFG_CRED_FILE)
 
-                with open(error_log_file, 'a') as f:
+                with open(ERROR_LOG_FILE, 'a') as f:
                     try:
                         f.write(f"{datetime.now()}: The user authentication failed!\n")
                     except:
@@ -193,7 +195,7 @@ def patch_data(url, username, password, record, data):
     try:
         request_response = response.json()
 
-        with open(executor_log_file, 'a') as f:
+        with open(EXECUTOR_LOG_FILE, 'a') as f:
             try:
                 f.write(f"{datetime.now()}: PATCH\n")
                 f.write(f"{datetime.now()}: {str(request_response)}\n")
@@ -207,6 +209,8 @@ def patch_data(url, username, password, record, data):
 
 
 def monitor_executions(credentials):
+    global SHUT_DOWN
+
     start_time = datetime.now()
 
     try:
@@ -218,24 +222,27 @@ def monitor_executions(credentials):
 
             items = get_data(credentials['url'], credentials['username'], credentials['password'])
 
-            if items == None:
+            if SHUT_DOWN:
+                break
+
+            elif items == None:
                 continue
 
             elif items == False:
                 break
 
-            if not run_executions(credentials['url'], credentials['username'], credentials['password'], items):
+            elif not run_executions(credentials['url'], credentials['username'], credentials['password'], items):
                 break
 
     except KeyboardInterrupt:
-        print(f"{datetime.now()}: Stopping the monitoring...")
+        print(f"{datetime.now()}: Stopping the executor...")
         sleep(5)
 
     except:
         print(f"{datetime.now()}: {format_exc()}")
         print(f"{datetime.now()}: An unexpected error occurred!  The executor will close and restart now...")
 
-        with open(error_log_file, 'a') as f:
+        with open(ERROR_LOG_FILE, 'a') as f:
             try:
                 f.write(f"{datetime.now()}: {format_exc()}\n")
             except:
@@ -245,7 +252,7 @@ def monitor_executions(credentials):
 
 
 def run_executions(url, username, password, items):
-    items = [item for item in items if item['status'] == "Pending" and item['computer_name'].lower() == env_computer and item['user_name'].lower() == env_user]
+    items = [item for item in items if item['status'] == "Pending" and item['computer_name'].lower() == ENV_COMPUTER and item['user_name'].lower() == ENV_USER]
     items = sorted(items, key=itemgetter('priority', 'id'))
 
     for item in items:
@@ -254,7 +261,7 @@ def run_executions(url, username, password, items):
         if app == "foxbot.exe" or app == "foxtrot.exe":
             processes = subprocess.run(["wmic", "process", "where", f"name='{app}'", "call", "GetOwner"], stdout=subprocess.PIPE, text=True).stdout.split('\n')
 
-            if any(str(f'\tuser = "{env_user}";') in user.lower() for user in processes):
+            if any(str(f'\tuser = "{ENV_USER}";') in user.lower() for user in processes):
                 continue
 
             try:
@@ -284,7 +291,7 @@ def run_executions(url, username, password, items):
 
         if path.isfile(item['app']) and path.isfile(item['botflow']):
             try:
-                with open(executor_log_file, 'a') as executor_log:
+                with open(EXECUTOR_LOG_FILE, 'a') as executor_log:
                     executor_log.write(f"{datetime.now()}: EXECUTING BOTFLOW\n")
 
                     if app == "foxbot.exe" or app == "foxtrot.exe":
@@ -366,13 +373,13 @@ def run_executions(url, username, password, items):
 def main():
     os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-    if path.exists(error_log_file):
-        remove(error_log_file)
+    if path.exists(ERROR_LOG_FILE):
+        remove(ERROR_LOG_FILE)
 
-    if path.exists(executor_log_file):
-        remove(executor_log_file)
+    if path.exists(EXECUTOR_LOG_FILE):
+        remove(EXECUTOR_LOG_FILE)
 
-    if not env_var in environ:
+    if not ENV_VAR in environ:
         create_env_variable()
 
         print("""
@@ -382,23 +389,31 @@ This program will close down in 10 seconds. Hereafter, please restart the progra
         sleep(10)
         return None
 
-    if not path.exists(cfg_cred_file):
+    if not path.exists(CFG_CRED_FILE):
         create_cfg_file()
 
     else:
-        with open(cfg_cred_file, 'rb') as f:
+        with open(CFG_CRED_FILE, 'rb') as f:
             file_content = f.read()
 
         if file_content == "" or file_content == b"":
-            remove(cfg_cred_file)
+            remove(CFG_CRED_FILE)
             create_cfg_file()
 
-            with open(cfg_cred_file, 'rb') as f:
+            with open(CFG_CRED_FILE, 'rb') as f:
                 file_content = f.read()
 
-    credentials = loads(Fernet(environ[env_var].encode("utf-8")).decrypt(file_content).decode("utf-8"))
+    credentials = loads(Fernet(environ[ENV_VAR].encode("utf-8")).decrypt(file_content).decode("utf-8"))
 
-    monitor_executions(credentials)
+    with SysTrayIcon("automation_orchestrator_executor\\static\\favicon.ico", "Automation Orchestrator Executor", on_quit=on_quit_callback) as systray:
+        monitor_executions(credentials)
+
+
+def on_quit_callback(systray):
+    global SHUT_DOWN
+    SHUT_DOWN = True
+
+    print(f"{datetime.now()}: Stopping the executor...")
 
 
 if __name__ == '__main__':
