@@ -24,7 +24,6 @@ error_log_file = "logs\\error_log.txt"
 executor_log_file = "logs\\executor_log.txt"
 botflow_execution_url = "api/0/botflowexecution/"
 error_count_max = 10
-max_runtime = 1800
 
 
 def create_env_variable():
@@ -212,7 +211,6 @@ def monitor_executions(credentials):
 
     try:
         print(f"{datetime.now()}: The executor is now running!")
-        print(f"{datetime.now()}: The executor will automatically close and restart in {str(max_runtime)} seconds...")
 
         while True:
             range(10000)
@@ -229,15 +227,9 @@ def monitor_executions(credentials):
             if not run_executions(credentials['url'], credentials['username'], credentials['password'], items):
                 break
 
-            if (datetime.now() - start_time).seconds >= max_runtime:
-                print(f"{datetime.now()}: The executor has now been running for more than {str(max_runtime)} seconds and is closing to restart...")
-                sleep(10)
-                break
-
     except KeyboardInterrupt:
         print(f"{datetime.now()}: Stopping the monitoring...")
-        sleep(2)
-        return None
+        sleep(5)
 
     except:
         print(f"{datetime.now()}: {format_exc()}")
@@ -250,7 +242,6 @@ def monitor_executions(credentials):
                 pass
 
         sleep(10)
-        return None
 
 
 def run_executions(url, username, password, items):
