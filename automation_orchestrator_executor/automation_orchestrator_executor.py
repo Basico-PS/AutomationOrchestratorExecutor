@@ -291,7 +291,7 @@ def run_executions(url, username, password, items):
 
         status = "Completed"
 
-        if path.isfile(item['botflow']):
+        if path.isfile(item['app']) and path.isfile(item['botflow']):
             try:
                 with open(executor_log_file, 'a') as executor_log:
                     executor_log.write(f"{datetime.now()}: EXECUTING BOTFLOW\n")
@@ -355,7 +355,12 @@ def run_executions(url, username, password, items):
                         pass
 
         else:
-            status = "Error - Botflow Missing"
+            if not path.isfile(item['app']):
+                status = "Error - App Missing"
+            elif not path.isfile(item['botflow']):
+                status = "Error - Botflow Missing"
+            else:
+                status = "Error - Unknown Issue"
 
         data = {"time_end": datetime.now(pytz.timezone('Europe/Copenhagen')).strftime(f"%Y-%m-%dT%H:%M:%S+0{str(int(datetime.now(pytz.timezone('Europe/Copenhagen')).utcoffset().seconds / 60 / 60))}:00"), "status": status}
 
