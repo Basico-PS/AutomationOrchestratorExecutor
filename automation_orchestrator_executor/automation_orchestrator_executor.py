@@ -411,9 +411,10 @@ This program will close down in 10 seconds. Hereafter, please restart the progra
 
 def on_quit_callback(systray):
     global SHUT_DOWN
-    SHUT_DOWN = True
+    if not SHUT_DOWN:
+        SHUT_DOWN = True
 
-    print(f"{datetime.now()}: Stopping the executor...")
+        print(f"{datetime.now()}: Stopping the executor...")
 
 
 if __name__ == '__main__':
