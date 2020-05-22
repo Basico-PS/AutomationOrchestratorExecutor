@@ -17,7 +17,7 @@ IMPORTANT: For the Automation Orchestrator to work, you need to run the server i
 
 We highly recommend that the Automation Orchestrator Executor is installed and setup only by people experienced with both Python and Nintex RPA. You are always welcome to contact us for assistance via: robotics@basico.dk
 
-For the Automation Orchestrator Executor to work, you need to install Python. Make sure to install the latest [![Python 3](https://img.shields.io/badge/python-3-blue.svg)](https://www.python.org/ftp/python/3.8.2/python-3.8.2-amd64.exe) 64-bit version. If you are in any doubts on how to correctly install Python, follow [this guide](https://www.mbalslow.com/blog/article/how-to-install-python/) or [contact us](#contact).
+For the Automation Orchestrator Executor to work, you need to install Python. Make sure to install the latest [![Python 3](https://img.shields.io/badge/python-3-blue.svg)](https://www.python.org/ftp/python/3.8.3/python-3.8.3-amd64.exe) 64-bit version. If you are in any doubts on how to correctly install Python, follow [this guide](https://www.mbalslow.com/blog/article/how-to-install-python/) or [contact us](#contact).
 
 After installing Python, you are now ready to install the Automation Orchestrator Executor. Follow these steps precisely:
 
