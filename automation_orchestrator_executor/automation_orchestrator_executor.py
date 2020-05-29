@@ -1,4 +1,5 @@
 import os
+import glob
 import subprocess
 import pytz
 import psutil
@@ -259,6 +260,8 @@ def run_executions(url, username, password, items):
     for item in items:
         app = item['app'].split("\\")[-1].lower()
 
+        nintex_rpa_license_path = ""
+
         if app == "foxbot.exe" or app == "foxtrot.exe":
             processes = [proc.as_dict(attrs=['name', 'username']) for proc in psutil.process_iter()]
             processes = [proc for proc in processes if str(proc['name']).lower() == "foxtrot.exe" or str(proc['name']).lower() == "foxbot.exe"]
@@ -268,22 +271,24 @@ def run_executions(url, username, password, items):
                 continue
 
             try:
-                nintex_rpa_license_path = item['nintex_rpa_license_path']
+                nintex_rpa_license_path = str(item['nintex_rpa_license_path']).strip()
             except:
                 nintex_rpa_license_path = ""
 
             if nintex_rpa_license_path != "":
+                nintex_rpa_license_path = os.path.join(nintex_rpa_license_path, "System")
+
                 if os.path.exists(nintex_rpa_license_path):
-                    nintex_rpa_license_path = os.path.join(nintex_rpa_license_path, "System")
+                    if app == "foxbot.exe":
+                        if item['nintex_rpa_available_foxbot_licenses'] <= len([file for file in os.listdir(nintex_rpa_license_path) if file.startswith("RPA") and file.endswith(".net")]):
+                            continue
 
-                    if os.path.exists(nintex_rpa_license_path):
-                        if app == "foxbot.exe":
-                            if item['nintex_rpa_available_foxbot_licenses'] <= len([file for file in os.listdir(nintex_rpa_license_path) if file.startswith("RPA") and file.endswith(".net")]):
-                                continue
+                    elif app == "foxtrot.exe":
+                        if item['nintex_rpa_available_foxtrot_licenses'] <= len([file for file in os.listdir(nintex_rpa_license_path) if file.startswith("FTE") and file.endswith(".net")]):
+                            continue
 
-                        elif app == "foxtrot.exe":
-                            if item['nintex_rpa_available_foxtrot_licenses'] <= len([file for file in os.listdir(nintex_rpa_license_path) if file.startswith("FTE") and file.endswith(".net")]):
-                                continue
+                else:
+                    nintex_rpa_license_path = None
 
         data = {"time_start": datetime.now(pytz.timezone('Europe/Copenhagen')).strftime(f"%Y-%m-%dT%H:%M:%S+0{str(int(datetime.now(pytz.timezone('Europe/Copenhagen')).utcoffset().seconds / 60 / 60))}:00"), "status": "Running"}
 
@@ -347,13 +352,21 @@ def run_executions(url, username, password, items):
                 except:
                     pass
 
-                timeout_kill_processes = [str(process).strip() for process in item['timeout_kill_processes'].split(",")]
+                if str(item['timeout_kill_processes']).strip() != "":
+                    timeout_kill_processes = [str(process).strip() for process in item['timeout_kill_processes'].split(",")]
 
-                for process in timeout_kill_processes:
-                    try:
-                        system(f'taskkill /f /im {process}')
-                    except:
-                        pass
+                    for process in timeout_kill_processes:
+                        try:
+                            system(f'taskkill /f /im {process}')
+                        except:
+                            pass
+
+                if nintex_rpa_license_path != None:
+                    for file in glob.glob(os.path.join(nintex_rpa_license_path, '*.net')):
+                        try:
+                            os.remove(file)
+                        except:
+                            pass
 
         else:
             if not path.isfile(item['app']):
