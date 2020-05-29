@@ -361,12 +361,13 @@ def run_executions(url, username, password, items):
                         except:
                             pass
 
-                if nintex_rpa_license_path != None:
-                    for file in glob.glob(os.path.join(nintex_rpa_license_path, '*.net')):
-                        try:
-                            os.remove(file)
-                        except:
-                            pass
+                if app == "foxbot.exe" or app == "foxtrot.exe":
+                    if os.path.exists(str(nintex_rpa_license_path)):
+                        for file in glob.glob(os.path.join(nintex_rpa_license_path, '*.net')):
+                            try:
+                                os.remove(file)
+                            except:
+                                pass
 
         else:
             if not path.isfile(item['app']):
