@@ -1,5 +1,5 @@
-cryptography>=2.8
-pytz>=2019.3
-requests>=2.23.0
-infi.systray==0.1.12
-psutil>=5.7.0
+cryptography
+pytz
+requests
+infi.systray
+psutil
