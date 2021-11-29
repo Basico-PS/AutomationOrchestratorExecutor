@@ -108,7 +108,7 @@ def get_data(url, username, password):
                 with open(ERROR_LOG_FILE, 'a') as f:
                     try:
                         f.write(f"{datetime.now()}: The user authentication failed!\n")
-                    except:
+                    except Exception:
                         pass
 
                 sleep(10)
@@ -297,7 +297,7 @@ def run_executions(url, username, password, items):
 
         status = "Completed"
 
-        if path.isfile(item['app']) and path.isfile(item['botflow']):
+        if path.isfile(item['app']) and (path.isfile(item['botflow']) or item['is_file'] == False):
             try:
                 with open(EXECUTOR_LOG_FILE, 'a') as executor_log:
                     executor_log.write(f"{datetime.now()}: EXECUTING BOTFLOW\n")
@@ -339,7 +339,7 @@ def run_executions(url, username, password, items):
                         subprocess.run(
                             [item['app'], item['botflow']],
                             timeout=(int(item['timeout_minutes']) * 60),
-                            cwd=path.dirname(item['botflow']),
+                            cwd=path.dirname(item['botflow']) if item['is_file'] else path.dirname(item['app']),
                             stdout=executor_log
                         )
 
@@ -349,7 +349,7 @@ def run_executions(url, username, password, items):
                 try:
                     if app == "foxbot.exe" or app == "foxtrot.exe":
                         system('taskkill /f /im foxtrot64.exe')
-                except:
+                except Exception:
                     pass
 
                 if str(item['timeout_kill_processes']).strip() != "":
@@ -358,7 +358,7 @@ def run_executions(url, username, password, items):
                     for process in timeout_kill_processes:
                         try:
                             system(f'taskkill /f /im {process}')
-                        except:
+                        except Exception:
                             pass
 
                 if app == "foxbot.exe" or app == "foxtrot.exe":
@@ -366,7 +366,7 @@ def run_executions(url, username, password, items):
                         for file in glob.glob(os.path.join(nintex_rpa_license_path, '*.net')):
                             try:
                                 os.remove(file)
-                            except:
+                            except Exception:
                                 pass
 
         else:
