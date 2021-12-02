@@ -2,6 +2,7 @@ import os
 import glob
 import subprocess
 import pytz
+import shlex
 import psutil
 from time import sleep
 from json import dumps, loads
@@ -337,7 +338,7 @@ def run_executions(url, username, password, items):
 
                     else:
                         subprocess.run(
-                            [item['app'], item['botflow']],
+                            [item['app']] + shlex.split(item['botflow'], posix=False),
                             timeout=(int(item['timeout_minutes']) * 60),
                             cwd=path.dirname(item['botflow']) if item['is_file'] else path.dirname(item['app']),
                             stdout=executor_log
